@@ -43,7 +43,7 @@ describe Takeaway do
     @takeaway.process_order(
       :expected_value => 5.00, 
       :telephone_number => @customer_tel,
-      :dishes =>  ['pepperoni', 'cheese & tomato pizza'])
+      :dishes =>  {'pepperoni' => 1, 'cheese & tomato pizza' => 1})
   end
 
   it "can calculate the value of dishes" do
@@ -51,8 +51,17 @@ describe Takeaway do
       'ham & pinapple pizza' => 1.00,
       'cheese & tomato pizza' => 2.00,
       'pepperoni' => 3.00)
-    dishes = ['ham & pinapple pizza', 'cheese & tomato pizza', 'pepperoni']
-    @takeaway.send(:value_of, dishes)
+    dishes = {'ham & pinapple pizza' => 1, 'cheese & tomato pizza' => 1, 'pepperoni' => 1}
+    @takeaway.send(:value_of, dishes).must_equal 6.00
+  end
+
+  it "can calculate the value of dishes when multiple quantities have been ordered" do
+    @takeaway.add_to_menu(
+      'ham & pinapple pizza' => 1.00,
+      'cheese & tomato pizza' => 2.00,
+      'pepperoni' => 3.00)
+    dishes = {'ham & pinapple pizza' => 2, 'cheese & tomato pizza' => 1, 'pepperoni' => 3}
+    @takeaway.send(:value_of, dishes).must_equal 13.00
   end
 
   it "should reject orders when the prices of dishes don't sum to equal the given total_prices" do
@@ -63,7 +72,7 @@ describe Takeaway do
       'pepperoni' => 3.00)
     lambda { @takeaway.process_order(
               :expected_value => 5.00,
-              :dishes =>  ['pepperoni'], 
+              :dishes =>  {'pepperoni' => 1}, 
               :telephone_number => @customer_tel) 
     }.must_raise RuntimeError, "Please confirm your order."
   end
@@ -84,8 +93,8 @@ describe Takeaway do
     expected_message = (Time.now + 3600).strftime("Thank you. Your order has been placed and will be delivered before %H:%M")
     @takeaway.stubs(:send_text).returns(true)
     @takeaway.process_order(
-      :expected_value => 5.00,
-      :dishes =>  ['pepperoni','cheese & tomato pizza'],
+      :expected_value => 7.00,
+      :dishes =>  {'pepperoni' => 1,'cheese & tomato pizza' => 2},
       :telephone_number => @customer_tel)
   end
 
